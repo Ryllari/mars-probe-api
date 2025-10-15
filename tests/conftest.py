@@ -7,8 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 from mars_probe_api.app import app
 from mars_probe_api.database import get_session
-from mars_probe_api.models import table_registry
-
+from mars_probe_api.models import Probe, table_registry
 
 
 @pytest_asyncio.fixture
@@ -40,3 +39,21 @@ async def app_client(db_session):
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def probe_a(db_session):
+    probe = Probe(size_x=5, size_y=5, direction="NORTH")
+    db_session.add(probe)
+    await db_session.commit()
+    await db_session.refresh(probe)
+    return probe
+
+
+@pytest_asyncio.fixture
+async def probe_b(db_session):
+    probe = Probe(size_x=3, size_y=4, direction="EAST")
+    db_session.add(probe)
+    await db_session.commit()
+    await db_session.refresh(probe)
+    return probe

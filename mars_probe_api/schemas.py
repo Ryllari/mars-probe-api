@@ -1,6 +1,6 @@
 import uuid
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, Field
+from typing import Literal, List
 
 
 class ProbeCreate(BaseModel):
@@ -18,3 +18,7 @@ class ProbeResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class ProbeListResponse(BaseModel):
+    probes: List[ProbeResponse] = Field(default_factory=list)

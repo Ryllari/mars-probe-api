@@ -2,11 +2,12 @@ from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mars_probe_api.database import get_session
 from mars_probe_api.models import Probe
-from mars_probe_api.schemas import ProbeCreate, ProbeResponse
+from mars_probe_api.schemas import ProbeCreate, ProbeListResponse, ProbeResponse
 
 router = APIRouter(prefix='/probes', tags=['probes'])
 
@@ -48,3 +49,12 @@ async def create_probe(probe_data: ProbeCreate, session: Session):
     await session.refresh(probe)
 
     return ProbeResponse.model_validate(probe)
+
+
+@router.get("/", response_model=ProbeListResponse)
+async def list_probes(session: Session):
+    result = await session.scalars(select(Probe))
+    probes = result.all()
+    
+    probes_list = [ProbeResponse.model_validate(p) for p in probes]
+    return ProbeListResponse(probes=probes_list)

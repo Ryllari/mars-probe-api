@@ -48,4 +48,3 @@ async def test_create_probe_with_validation_error(app_client, payload, expected_
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == expected_detail
-
