@@ -1,0 +1,41 @@
+services:
+  mars_probe_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+        
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d app_db -U app_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 1
+
+  mars_probe_app:
+    build: .
+    depends_on:
+      mars_probe_db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app_user:app_password@mars_probe_db:5432/app_db
+    ports:
+      - "8000:8000"
+
+  tests:
+    build: .
+    depends_on:
+      - mars_probe_app
+    environment:
+      DATABASE_URL: 'sqlite+aiosqlite:///:memory:'
+    volumes:
+      - .:/app
+    command: poetry run pytest -v
+
+volumes:
+  pgdata:
