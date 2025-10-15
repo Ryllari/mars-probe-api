@@ -29,12 +29,11 @@ services:
 
   tests:
     build: .
-    depends_on:
-      - mars_probe_app
     environment:
       DATABASE_URL: 'sqlite+aiosqlite:///:memory:'
     volumes:
       - .:/app
+    entrypoint: ""
     command: poetry run pytest -v
 
 volumes:

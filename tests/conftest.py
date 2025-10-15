@@ -3,7 +3,7 @@ import pytest_asyncio
 
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 
 from mars_probe_api.app import app
 from mars_probe_api.database import get_session
@@ -18,12 +18,11 @@ async def db_session():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.create_all)
 
-    async with async_session() as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
     async with engine.begin() as conn:
