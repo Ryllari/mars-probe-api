@@ -31,6 +31,15 @@ Session = Annotated[AsyncSession, Depends(get_session)]
     }
 )
 async def create(probe_data: ProbeCreate, session: Session):
+    """
+    Launch a new Mars Probe and define the grid size.
+
+    - **x**: Grid size in the X direction (integer >= 0)
+    - **y**: Grid size in the Y direction (integer >= 0)
+    - **direction**: Initial direction of the probe (NORTH, EAST, SOUTH, WEST)
+
+    The probe always starts at position (0, 0).
+    """
     if not isinstance(probe_data.x, int) or probe_data.x < 0:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -66,6 +75,9 @@ async def create(probe_data: ProbeCreate, session: Session):
 
 @router.get("/", response_model=ProbeListResponse)
 async def list_probes(session: Session):
+    """
+    List all registered probes and their current positions.
+    """
     result = await session.scalars(select(Probe))
     probes = result.all()
     
@@ -86,6 +98,15 @@ async def move(
     request: ProbeMoveRequest,
     session: AsyncSession = Depends(get_session)
 ):
+    """
+    Move an existing probe following a sequence of commands.
+
+    - **probe_id**: UUID of the probe to move
+    - **commands**: String of commands. Valid commands:
+        - **M**: move forward one unit in the current direction
+        - **L**: rotate left 90 degrees
+        - **R**: rotate right 90 degrees
+    """
     try:
         probe_id = uuid.UUID(probe_id)
     except ValueError:
