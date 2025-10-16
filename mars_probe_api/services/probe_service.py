@@ -1,9 +1,11 @@
 from fastapi import HTTPException
 from http import HTTPStatus
-from mars_probe_api.models import Probe
+from mars_probe_api.models.probe import Probe
 from copy import deepcopy
 
+
 DIRECTIONS = ["NORTH", "EAST", "SOUTH", "WEST"]
+
 
 class ProbeService:
     VALID_COMMANDS = {"M", "L", "R"}
@@ -25,11 +27,8 @@ class ProbeService:
 
     @staticmethod
     def execute_commands(probe: Probe, commands: str) -> Probe:
-        """Executa os comandos sequenciais de rotação e movimento."""
-
         ProbeService.validate_commands(commands)
 
-        # Cria uma cópia temporária para validar toda a sequência
         temp_probe = deepcopy(probe)
 
         try:
@@ -39,16 +38,13 @@ class ProbeService:
                 elif command == "R":
                     temp_probe.direction = ProbeService._turn(temp_probe.direction, left=False)
                 elif command == "M":
-                    ProbeService._move(temp_probe)  # _move levanta HTTPException se inválido
+                    ProbeService._move(temp_probe)
         except HTTPException as e:
-            # Nenhum comando é aplicado ao probe real
             raise e
 
-        # Aplica a sequência completa ao probe real somente se tudo passar
         probe.x, probe.y, probe.direction = temp_probe.x, temp_probe.y, temp_probe.direction
         return probe
 
-    # --- Métodos internos privados ---
     @staticmethod
     def _turn(direction: str, left: bool) -> str:
         idx = DIRECTIONS.index(direction)

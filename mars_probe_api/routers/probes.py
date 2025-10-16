@@ -1,14 +1,15 @@
 import uuid
-from http import HTTPStatus
-from typing import Annotated
+
 from fastapi import APIRouter
 from fastapi import APIRouter, Depends, HTTPException
+from http import HTTPStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
 from mars_probe_api.database import get_session
-from mars_probe_api.models import Probe
-from mars_probe_api.schemas import (
+from mars_probe_api.models.probe import Probe
+from mars_probe_api.schemas.probe import (
     ProbeCreate,
     ProbeListResponse,
     ProbeMoveRequest,
@@ -16,13 +17,20 @@ from mars_probe_api.schemas import (
 )
 from mars_probe_api.services.probe_service import DIRECTIONS, ProbeService
 
-router = APIRouter(prefix='/probes', tags=['probes'])
 
+router = APIRouter(prefix='/probes', tags=['probes'])
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
-@router.post("/", status_code=HTTPStatus.CREATED, response_model=ProbeResponse)
-async def create_probe(probe_data: ProbeCreate, session: Session):
+@router.post(
+    "/",
+    status_code=HTTPStatus.CREATED,
+    response_model=ProbeResponse,
+    responses={
+        400: {"description": "Bad Request"}
+    }
+)
+async def create(probe_data: ProbeCreate, session: Session):
     if not isinstance(probe_data.x, int) or probe_data.x < 0:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -65,8 +73,15 @@ async def list_probes(session: Session):
     return ProbeListResponse(probes=probes_list)
 
 
-@router.post("/{probe_id}/move", response_model=ProbeResponse)
-async def move_probe(
+@router.put(
+    "/{probe_id}/move", 
+    response_model=ProbeResponse,
+    responses={
+        400: {"description": "Bad Request"},
+        404: {"description": "Not Foud"}
+    }
+)
+async def move(
     probe_id: str,
     request: ProbeMoveRequest,
     session: AsyncSession = Depends(get_session)
@@ -74,11 +89,17 @@ async def move_probe(
     try:
         probe_id = uuid.UUID(probe_id)
     except ValueError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Invalid probe ID format")
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Invalid probe ID format"
+        )
 
     probe = await session.scalar(select(Probe).where(Probe.id == probe_id))
     if not probe:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Probe not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Probe not found"
+        )
 
     try:
         ProbeService.execute_commands(probe, request.commands)

@@ -2,10 +2,9 @@ import uuid
 
 from sqlalchemy import Column, Integer, String, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, registry
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-table_registry = registry()
+from mars_probe_api.models import table_registry
 
 
 @table_registry.mapped_as_dataclass
@@ -16,6 +15,10 @@ class Probe:
             "direction IN ('NORTH', 'SOUTH', 'EAST', 'WEST')",
             name="check_direction_valid"
         ),
+        CheckConstraint("size_x >= 0", name="check_size_x_non_negative"),
+        CheckConstraint("size_y >= 0", name="check_size_y_non_negative"),
+        CheckConstraint("x >= 0", name="check_x_non_negative"),
+        CheckConstraint("y >= 0", name="check_y_non_negative"),
     )
 
     size_x: Mapped[int] = mapped_column(Integer, nullable=False)

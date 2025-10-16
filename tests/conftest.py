@@ -7,7 +7,8 @@ from sqlalchemy.pool import StaticPool
 
 from mars_probe_api.app import app
 from mars_probe_api.database import get_session
-from mars_probe_api.models import Probe, table_registry
+from mars_probe_api.models import table_registry
+from mars_probe_api.models.probe import Probe
 
 
 @pytest_asyncio.fixture
