@@ -52,7 +52,7 @@ async def probe_a(db_session):
 
 @pytest_asyncio.fixture
 async def probe_b(db_session):
-    probe = Probe(size_x=3, size_y=4, direction="EAST")
+    probe = Probe(size_x=3, size_y=3, direction="EAST")
     db_session.add(probe)
     await db_session.commit()
     await db_session.refresh(probe)

@@ -22,3 +22,7 @@ class ProbeResponse(BaseModel):
 
 class ProbeListResponse(BaseModel):
     probes: List[ProbeResponse] = Field(default_factory=list)
+
+
+class ProbeMoveRequest(BaseModel):
+    commands: str
